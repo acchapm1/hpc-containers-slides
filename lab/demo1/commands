@@ -1,0 +1,17 @@
+
+# Pull Python from Docker Hub (~200MB, takes 1-2 min)
+apptainer pull python311.sif docker://python:3.11-slim
+echo "Pull complete. File size:"
+ls -lh python311.sif 2>/dev/null || echo "(run on your cluster)"
+
+# Your host Python
+python3 --version
+
+# Container Python (different version, isolated)
+apptainer exec python311.sif python3 --version
+
+apptainer shell python311.sif
+# Apptainer> whoami          ← same username as host!
+# Apptainer> echo $HOME      ← your home dir is mounted
+# Apptainer> pip list        ← see installed packages
+# Apptainer> exit

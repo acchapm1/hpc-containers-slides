@@ -1,0 +1,43 @@
+# bioinfo.def
+
+Bootstrap: docker
+From: ubuntu:22.04
+
+%post
+    apt-get update -y
+    apt-get install -y \
+        python3 python3-pip \
+        wget curl fastqc
+    pip3 install multiqc
+
+%environment
+    export LC_ALL=C   # required!
+    export LANG=C
+
+%runscript
+    echo "=== Bioinformatics Tools ==="
+    fastqc --version
+    multiqc --version
+
+
+
+# Build (~3-4 min — more packages)
+apptainer build \
+    bioinfo.sif bioinfo.def
+
+# Verify tools installed
+apptainer run bioinfo.sif
+
+# Run FastQC on your data
+# (--bind makes ./data visible as /data)
+apptainer exec \
+    --bind ./data:/data \
+    bioinfo.sif \
+    fastqc /data/sample.fastq.gz \
+    -o /data/results/
+
+# Aggregate with MultiQC
+apptainer exec \
+    --bind ./data:/data \
+    bioinfo.sif \
+    multiqc /data/results/

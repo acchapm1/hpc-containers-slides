@@ -1,0 +1,41 @@
+
+## scipy-demo.def
+
+Bootstrap: docker
+From: python:3.11-slim
+
+%post
+    pip install --no-cache-dir \
+        numpy scipy matplotlib
+
+%runscript
+    python3 -c "
+import numpy as np
+from scipy import stats
+data = np.random.normal(5, 2, 1000)
+print(f'Mean:  {data.mean():.3f}')
+print(f'Stdev: {data.std():.3f}')
+t, p = stats.ttest_1samp(data, 5)
+print(f't={t:.3f}  p={p:.4f}')
+"
+
+## Build & run
+
+# Write the def file
+nano scipy-demo.def
+
+# Build the container
+apptainer build \
+    scipy-demo.sif \
+    scipy-demo.def
+
+# Check file size
+ls -lh scipy-demo.sif
+
+# Run the %runscript
+apptainer run scipy-demo.sif
+
+# Confirm container Python version
+apptainer exec scipy-demo.sif \
+    python3 --version
+

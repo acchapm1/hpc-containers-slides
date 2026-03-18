@@ -1,0 +1,32 @@
+# run_analysis.sh
+
+#!/bin/bash
+#SBATCH --job-name=apptainer-demo
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4          # 4 CPU cores
+#SBATCH --mem=8G                   # 8 GB RAM
+#SBATCH --time=01:00:00            # 1 hour walltime
+#SBATCH --output=logs/%j.out      # log per job ID
+
+# Load apptainer module (cluster-specific)
+module load apptainer
+
+# Run analysis inside container
+apptainer exec \
+    --bind $SCRATCH:/scratch \          # mount Lustre scratch
+    $HOME/containers/scipy-demo.sif \   # your .sif file
+    python3 /scratch/analysis/my_analysis.py
+
+
+# Submit
+
+mkdir -p logs
+sbatch run_analysis.sh
+
+# Monitor
+
+squeue -u $USER
+
+# Cancel
+
+scancel <jobid>
