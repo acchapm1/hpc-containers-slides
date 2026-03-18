@@ -6,7 +6,7 @@ theme:
   name: tokyonight-night
 ---
 
-![image:width:75%](img/all.jpeg)
+![image:width:75%](../img/all.jpeg)
 
 <!-- 
 speaker_note: |
