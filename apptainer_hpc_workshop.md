@@ -1,7 +1,7 @@
 ---
 title: "Containers for HPC"
 sub_title: "Getting Started with Apptainer"
-author: "HPC Research Computing Workshop - https://github.com/acchapm1/hpc-containers- "
+author: "HPC Research Computing Workshop - https://github.com/acchapm1/hpc-containers "
 theme:
   name: tokyonight-night
 ---
