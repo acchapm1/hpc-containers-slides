@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+# ai agents
+AGENTS.md
+.opencode
+.claude
+
 # Distribution / packaging
 .Python
 build/
