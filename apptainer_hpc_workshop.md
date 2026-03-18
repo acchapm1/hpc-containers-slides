@@ -1,10 +1,13 @@
 ---
 title: "Containers for HPC"
 sub_title: "Getting Started with Apptainer"
-author: "HPC Research Computing Workshop  ·  60 min  ·  20 min slides + 40 min hands-on"
+author: "HPC Research Computing Workshop - https://github.com/acchapm1/hpc-containers- "
 theme:
   name: tokyonight-night
 ---
+
+<!-- alignment: center -->
+![image:width:100%](img/all.jpeg)
 
 <!-- 
 speaker_note: |
@@ -144,10 +147,6 @@ speaker_note: |
 Docker vs. Apptainer: Why Not Just Use Docker?
 ===
 
-<!-- column_layout: [2, 1, 1] -->
-
-<!-- column: 0 -->
-
 | Feature                      | Docker                 | Apptainer            |
 |------------------------------|------------------------|----------------------|
 | Requires root/sudo           | ✅ Yes                 | ❌ No               |
@@ -158,30 +157,38 @@ Docker vs. Apptainer: Why Not Just Use Docker?
 | Import Docker images         | N/A                    | ✅ `docker://`      |
 | Portable single file         | ❌ No                  | ✅ `.sif` file      |
 
+<!--
+speaker_note: |
+    SPEAKER NOTES — Slide 4: Docker vs. Apptainer (3 min)
+     
+    This is the most important slide in the talk, so let's spend a moment on it.
+
+    Docker is fantastic — it's the dominant container technology in industry, it has a huge ecosystem, and we can actually reuse Docker images directly in Apptainer. So why not just use Docker on HPC?
+-->
+
 <!-- reset_layout -->
+<!-- pause -->
 
 <!-- new_line -->
 
 > 🔑 **The core problem with Docker on HPC:** The Docker daemon runs as **root**. On a shared cluster with thousands of users and petabytes of data, anyone who can run Docker can trivially escalate to root on the host. HPC sysadmins universally ban it.
 
-<!-- new_line -->
-
-<span style="color: #00b4d8">**Apptainer was built from the ground up in 2015 specifically for shared HPC systems. A user inside a container is always the same user outside.**</span>
-
 <!--
 speaker_note: |
-    SPEAKER NOTES — Slide 4: Docker vs. Apptainer (3 min)
-
-    This is the most important slide in the talk, so let's spend a moment on it.
-
-    Docker is fantastic — it's the dominant container technology in industry, it has a huge ecosystem, and we can actually reuse Docker images directly in Apptainer. So why not just use Docker on HPC?
-
     The answer comes down to one word: root.
 
     Docker works by running a daemon — a background service — as the root user. When you run a Docker container, you're effectively getting root access on that machine. On your personal laptop, that's fine. On a shared HPC cluster with thousands of users and petabytes of research data, that's a catastrophic security risk. Anyone who can run Docker can trivially escalate to root on the host system.
 
     This is why HPC sysadmins universally say no to Docker. I've never seen a production HPC cluster that allows Docker for general users.
+-->
 
+<!-- new_line -->
+<!-- pause -->
+
+<span style="color: #00b4d8">**Apptainer was built from the ground up in 2015 specifically for shared HPC systems. A user inside a container is always the same user outside.**</span>
+
+<!--
+speaker_note: |
     Apptainer — previously called Singularity — was built from the ground up in 2015 specifically because of this problem. Its core design principle is: a user inside a container is the same user outside. You can never get more privileges than you started with.
 
     It also produces a single .sif file — a Singularity Image Format file — that you can just copy around like any other file. No daemon, no background process, no root. Just a file.
@@ -202,6 +209,16 @@ How Apptainer Works on HPC
 📄 Plain text recipe  
 `.def` file in Git  
 Version controlled  
+<!--
+speaker_note: |
+    SPEAKER NOTES — Slide 5: How Apptainer Works (2 min)
+
+    Let me walk you through the workflow — four steps.
+
+    First, you write a definition file. It's just a plain text file that describes what goes in your container — what base image to start from, what packages to install, what environment variables to set. We'll look at these in detail shortly, and you can check them into Git just like your code.
+-->
+
+<!-- pause -->
 
 <!-- column: 1 -->
 **2 · Build Once**
@@ -210,6 +227,13 @@ Version controlled
 Creates `.sif` file  
 Run as user/fakeroot  
 
+<!--
+speaker_note: |
+    Second, you run apptainer build. This creates a .sif file — your container. This is the only step that might require elevated privileges, and we'll talk about ways around that in a moment.
+-->
+
+<!-- pause -->
+
 <!-- column: 2 -->
 **3 · One File**
 
@@ -217,12 +241,26 @@ Run as user/fakeroot
 `rsync` it anywhere  
 Archive with data  
 
+<!--
+speaker_note: |
+    Third — and this is beautiful — you have one file. You can cp it, rsync it to another cluster, share it with a collaborator, archive it with your data. Five years from now, that file still runs exactly the same way.
+-->
+
+<!-- pause -->
+
 <!-- column: 3 -->
 **4 · Run Everywhere**
 
 🚀 Cluster, cloud, laptop  
 SLURM native  
 Same command always  
+
+<!--
+speaker_note: |
+    Fourth, you run it. Anywhere. On your workstation, on the cluster, in a SLURM job script — it's the same command.
+-->
+
+<!-- pause -->
 
 <!-- reset_layout -->
 
@@ -248,18 +286,6 @@ Same command always
 
 <!--
 speaker_note: |
-    SPEAKER NOTES — Slide 5: How Apptainer Works (2 min)
-
-    Let me walk you through the workflow — four steps.
-
-    First, you write a definition file. It's just a plain text file that describes what goes in your container — what base image to start from, what packages to install, what environment variables to set. We'll look at these in detail shortly, and you can check them into Git just like your code.
-
-    Second, you run apptainer build. This creates a .sif file — your container. This is the only step that might require elevated privileges, and we'll talk about ways around that in a moment.
-
-    Third — and this is beautiful — you have one file. You can cp it, rsync it to another cluster, share it with a collaborator, archive it with your data. Five years from now, that file still runs exactly the same way.
-
-    Fourth, you run it. Anywhere. On your workstation, on the cluster, in a SLURM job script — it's the same command.
-
     A few key behaviours to know: Apptainer automatically makes your home directory available inside the container. Your $HOME mounts through transparently. So your scripts, your data files in home — they're all accessible. If your data is on scratch or a Lustre filesystem, you add --bind /scratch:/scratch and it's mounted inside the container too.
 -->
 
@@ -271,6 +297,12 @@ Key Apptainer Commands
 *90% of your day-to-day usage fits in four commands*
 
 <!-- new_line -->
+<!--
+speaker_note: |
+    SPEAKER NOTES — Slide 6: Key Commands (2 min)
+
+    You really only need four commands to be productive with Apptainer, and we'll use all of them in the demo.
+-->
 
 <!-- pause -->
 
@@ -279,7 +311,10 @@ Key Apptainer Commands
 ```bash
 apptainer pull python311.sif docker://python:3.11-slim
 ```
-
+<!--
+speaker_note: |
+    apptainer pull is your entry point into the ecosystem. Docker Hub has millions of images — Python, R, Ubuntu, CUDA, Bioconductor, all the major bioinformatics tools. You can pull any of them and have a running environment in minutes without writing a single line of a definition file.
+-->
 <!-- pause -->
 
 **`apptainer shell`** — Drop into an interactive shell inside the container. Great for exploring and debugging.
@@ -287,7 +322,10 @@ apptainer pull python311.sif docker://python:3.11-slim
 ```bash
 apptainer shell myenv.sif
 ```
-
+<!--
+speaker_note: |
+    apptainer shell is your interactive exploration mode. Think of it like SSH-ing into a lightweight environment. You get a command prompt inside the container, you can run commands, check which packages are installed, test your workflow interactively. When you're done, just type exit.
+-->
 <!-- pause -->
 
 **`apptainer exec`** — Run a single command inside the container. Used in SLURM job scripts.
@@ -295,6 +333,10 @@ apptainer shell myenv.sif
 ```bash
 apptainer exec myenv.sif python3 analysis.py
 ```
+<!--
+speaker_note: |
+    apptainer exec is what you'll use in production. It runs one command inside the container and exits. This is what goes in your SLURM job scripts. It's non-interactive and scriptable — perfect for batch computing.
+-->
 
 <!-- pause -->
 
@@ -306,16 +348,6 @@ apptainer build myenv.sif myenv.def
 
 <!--
 speaker_note: |
-    SPEAKER NOTES — Slide 6: Key Commands (2 min)
-
-    You really only need four commands to be productive with Apptainer, and we'll use all of them in the demo.
-
-    apptainer pull is your entry point into the ecosystem. Docker Hub has millions of images — Python, R, Ubuntu, CUDA, Bioconductor, all the major bioinformatics tools. You can pull any of them and have a running environment in minutes without writing a single line of a definition file.
-
-    apptainer shell is your interactive exploration mode. Think of it like SSH-ing into a lightweight environment. You get a command prompt inside the container, you can run commands, check which packages are installed, test your workflow interactively. When you're done, just type exit.
-
-    apptainer exec is what you'll use in production. It runs one command inside the container and exits. This is what goes in your SLURM job scripts. It's non-interactive and scriptable — perfect for batch computing.
-
     apptainer build is where you define your own environment from scratch using a definition file. We'll spend a chunk of the demo building definition files, because this is where the real reproducibility magic lives.
 
     In the demo we'll go through each of these in order, starting with pull and building up to running jobs in SLURM.
@@ -357,13 +389,6 @@ From: ubuntu:22.04       # base image
 %runscript               # default command
     python3 analysis.py
 ```
-
-<!-- reset_layout -->
-
-<!-- new_line -->
-
-> 💡 **Key insight:** `Bootstrap` + `From` tap the entire Docker Hub ecosystem. Start from Python, R, Ubuntu, CUDA, Bioconductor — whatever fits your project.
-
 <!--
 speaker_note: |
     SPEAKER NOTES — Slide 7: Definition Files (3 min)
@@ -384,11 +409,32 @@ speaker_note: |
 
     The key insight: this file IS your documentation. When a collaborator or reviewer gets your container, they can look at this file and see exactly what was installed and how. That's the gold standard for computational reproducibility.
 -->
+<!-- reset_layout -->
+<!-- pause -->
+
+<!-- new_line -->
+
+> 💡 **Key insight:** `Bootstrap` + `From` tap the entire Docker Hub ecosystem. Start from Python, R, Ubuntu, CUDA, Bioconductor — whatever fits your project.
 
 <!-- end_slide -->
 
 Real Research Use Cases
 ===
+
+<!--
+speaker_note: |
+    SPEAKER NOTES — Slide 8: Use Cases (2 min)
+
+    Let me make this concrete with examples from actual research workflows.
+
+    Bioinformatics is probably the most mature use case. Genomics pipelines — GATK, BWA, Samtools — have very specific version dependencies. A GATK 3.x pipeline is completely different from GATK 4.x. Containerizing your pipeline means that five years later, when someone wants to reanalyze your data, they run the exact same software you used. This is increasingly a requirement for journals like Nature Methods.
+
+    Machine Learning and GPU computing is the other big one. Getting CUDA, cuDNN, PyTorch, and your specific driver version all working together is a nightmare. You do it once, you containerize it, and now that exact stack is frozen. When the cluster upgrades their drivers or when you move from one GPU generation to another, your container handles the compatibility layer.
+
+    For Python and R — instead of maintaining one giant conda environment that everyone shares and no one dares update, each project gets its own container. Your RNA-seq project has one environment, your proteomics project has another, and they never conflict.
+
+    And legacy code — this is underappreciated. If you're an HPC admin, you know the pain of users who have code that only runs on CentOS 7 that you decommissioned two years ago. Containers solve this permanently. The 2015 workflow runs inside a 2015-era container on your 2025 cluster.
+-->
 
 <!-- column_layout: [1, 1] -->
 
@@ -428,62 +474,15 @@ Real Research Use Cases
 - Meet journal reproducibility requirements
 
 <!-- reset_layout -->
-
+<!-- pause -->
 <!-- new_line -->
 
 > 💡 **Pattern:** Build once → archive the `.sif` with your data → anyone re-runs your analysis years later with zero setup friction.
-
-<!--
-speaker_note: |
-    SPEAKER NOTES — Slide 8: Use Cases (2 min)
-
-    Let me make this concrete with examples from actual research workflows.
-
-    Bioinformatics is probably the most mature use case. Genomics pipelines — GATK, BWA, Samtools — have very specific version dependencies. A GATK 3.x pipeline is completely different from GATK 4.x. Containerizing your pipeline means that five years later, when someone wants to reanalyze your data, they run the exact same software you used. This is increasingly a requirement for journals like Nature Methods.
-
-    Machine Learning and GPU computing is the other big one. Getting CUDA, cuDNN, PyTorch, and your specific driver version all working together is a nightmare. You do it once, you containerize it, and now that exact stack is frozen. When the cluster upgrades their drivers or when you move from one GPU generation to another, your container handles the compatibility layer.
-
-    For Python and R — instead of maintaining one giant conda environment that everyone shares and no one dares update, each project gets its own container. Your RNA-seq project has one environment, your proteomics project has another, and they never conflict.
-
-    And legacy code — this is underappreciated. If you're an HPC admin, you know the pain of users who have code that only runs on CentOS 7 that you decommissioned two years ago. Containers solve this permanently. The 2015 workflow runs inside a 2015-era container on your 2025 cluster.
--->
 
 <!-- end_slide -->
 
 Typical HPC Workflow
 ===
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   1. BUILD      │───▶│   2. STORE      │───▶│   3. TEST       │───▶│   4. RUN        │
-│                 │    │                 │    │                 │    │                 │
-│ apptainer build │    │ $HOME/containers│    │ apptainer shell │    │ sbatch job.sh   │
-│ myenv.sif       │    │ /myenv.sif      │    │ myenv.sif       │    │ (apptainer exec │
-│ myenv.def       │    │                 │    │                 │    │  inside)        │
-└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
-```
-
-<!-- new_line -->
-
-### Typical SLURM job script
-
-```bash
-#!/bin/bash
-#SBATCH --job-name=myanalysis
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=32G
-#SBATCH --time=04:00:00
-#SBATCH --output=logs/%j.out
-
-module load apptainer
-
-apptainer exec \
-    --bind $SCRATCH:/scratch \
-    $HOME/containers/myenv.sif \
-    python3 /scratch/my_analysis.py
-```
-
-> 💡 **The scheduler sees a normal job.** `apptainer exec` is completely transparent to SLURM — no special configuration needed.
 
 <!--
 speaker_note: |
@@ -502,10 +501,57 @@ speaker_note: |
     The --bind $SCRATCH:/scratch flag makes your cluster's scratch filesystem available at /scratch inside the container. Your analysis script writes to /scratch/results, and those files are actually being written to your cluster's scratch storage. Perfect.
 -->
 
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   1. BUILD      │───▶│   2. STORE      │───▶│   3. TEST       │───▶│   4. RUN        │
+│                 │    │                 │    │                 │    │                 │
+│ apptainer build │    │ $HOME/containers│    │ apptainer shell │    │ sbatch job.sh   │
+│ myenv.sif       │    │ /myenv.sif      │    │ myenv.sif       │    │ (apptainer exec │
+│ myenv.def       │    │                 │    │                 │    │  inside)        │
+└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+<!-- pause -->
+<!-- new_line -->
+
+### Typical SLURM job script
+
+```bash
+#!/bin/bash
+#SBATCH --job-name=myanalysis
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
+#SBATCH --time=04:00:00
+#SBATCH --output=logs/%j.out
+
+apptainer exec \
+    --bind $SCRATCH:/scratch \
+    $HOME/containers/myenv.sif \
+    python3 /scratch/my_analysis.py
+```
+<!-- pause -->
+
+> 💡 **The scheduler sees a normal job.** `apptainer exec` is completely transparent to SLURM — no special configuration needed.
+
 <!-- end_slide -->
 
 Tips & Gotchas
 ===
+
+<!-- speaker_note: |
+    SPEAKER NOTES — Slide 10: Tips & Gotchas (2 min)
+
+    Before we jump into the demo, let me flag the common stumbling blocks so you're prepared.
+
+    Building — this trips people up most. apptainer build needs either root or --fakeroot. On most modern clusters, --fakeroot is configured. If not, Sylabs Cloud at cloud.sylabs.io lets you upload your .def file and they build the .sif for free. You can also build on your own laptop if you have root there and then copy the .sif to the cluster.
+
+    Read-only filesystem — once a container is built, its internal filesystem is locked. You cannot write files inside it. This is actually a feature for reproducibility, but it means all your outputs have to go to bound paths — your home directory, scratch, etc. We'll demonstrate this.
+
+    MPI jobs — for parallel jobs across multiple nodes, the recommended approach is to let the host's MPI handle the process spawning, and have Apptainer just wrap the actual application code. Your sysadmin will have guidance on the right flags for your specific MPI setup.
+
+    GPU support is almost magical — you just add --nv to your apptainer exec command and NVIDIA GPU access passes through from the host. Your container can use the GPU without any special driver installation inside the container.
+
+    Cache management — big images like PyTorch with CUDA can be several gigabytes. By default they cache in your home directory. If your home has a quota, redirect the cache to scratch with the environment variable shown.
+-->
 
 <!-- column_layout: [1, 1] -->
 
@@ -567,22 +613,6 @@ apptainer inspect --labels  image.sif
 
 <!-- reset_layout -->
 
-<!-- speaker_note: |
-    SPEAKER NOTES — Slide 10: Tips & Gotchas (2 min)
-
-    Before we jump into the demo, let me flag the common stumbling blocks so you're prepared.
-
-    Building — this trips people up most. apptainer build needs either root or --fakeroot. On most modern clusters, --fakeroot is configured. If not, Sylabs Cloud at cloud.sylabs.io lets you upload your .def file and they build the .sif for free. You can also build on your own laptop if you have root there and then copy the .sif to the cluster.
-
-    Read-only filesystem — once a container is built, its internal filesystem is locked. You cannot write files inside it. This is actually a feature for reproducibility, but it means all your outputs have to go to bound paths — your home directory, scratch, etc. We'll demonstrate this.
-
-    MPI jobs — for parallel jobs across multiple nodes, the recommended approach is to let the host's MPI handle the process spawning, and have Apptainer just wrap the actual application code. Your sysadmin will have guidance on the right flags for your specific MPI setup.
-
-    GPU support is almost magical — you just add --nv to your apptainer exec command and NVIDIA GPU access passes through from the host. Your container can use the GPU without any special driver installation inside the container.
-
-    Cache management — big images like PyTorch with CUDA can be several gigabytes. By default they cache in your home directory. If your home has a quota, redirect the cache to scratch with the environment variable shown.
--->
-
 <!-- end_slide -->
 
 <!-- jump_to_middle -->
@@ -590,14 +620,29 @@ apptainer inspect --labels  image.sif
 HANDS-ON DEMOS
 ===
 
-<span style="color: #00b4d8">*40 minutes · 5 exercises · stay in your terminal*</span>
-
 <!-- end_slide -->
 
 Demo 1 — Pull & Explore a Pre-built Image
 ===
 
-<span style="color: #f59e0b">⏱ 8 min  ·  "Zero to running in 2 minutes"</span>
+<!--
+speaker_note: |
+    SPEAKER NOTES — Demo 1: Pull & Explore (8 min)
+
+    Let's start with the simplest possible thing — pulling a pre-built image from Docker Hub. No definition file, no building, just downloading and running.
+
+    [Type the pull command]
+    "Watch the progress bar — it's downloading layers from Docker Hub and assembling them into a single .sif file. Depending on network speed this takes 1-2 minutes. While it downloads, notice the command — docker://python:3.11-slim. That docker:// prefix is telling Apptainer to go to Docker Hub and pull the 'python' image, version '3.11-slim'. The slim variant is a minimal image — just what we need."
+
+    [While it downloads, talk through what a .sif file is — immutable squashfs archive]
+
+    [After pull completes]
+    "Now let's do something revealing. Check your host Python version, then check the container's Python version."
+    [run both commands]
+    "Different versions, right? And crucially — neither affected the other. They're completely isolated."
+
+    [Pause for questions — 1 min]
+-->
 
 <!-- new_line -->
 
@@ -614,47 +659,21 @@ ls -lh python311.sif 2>/dev/null || echo "(run on your cluster)"
 
 **Step 2 — Compare host vs container Python**
 
-```bash
+```bash +exec
 # Your host Python
 python3 --version
 
 # Container Python (different version, isolated)
 apptainer exec python311.sif python3 --version
 ```
+<!-- end_slide -->
 
-<!-- pause -->
-
-**Step 3 — Drop into an interactive shell**
-
-```bash
-apptainer shell python311.sif
-# Apptainer> whoami          ← same username as host!
-# Apptainer> echo $HOME      ← your home dir is mounted
-# Apptainer> pip list        ← see installed packages
-# Apptainer> exit
-```
-
-<!-- new_line -->
-
-> 👁 **Notice:** Same username inside and outside. `$HOME` already mounted. No `sudo` anywhere.
+Demo 1 — Pull & Explore a Pre-built Image
+===
 
 <!--
 speaker_note: |
     SPEAKER NOTES — Demo 1: Pull & Explore (8 min)
-
-    [BEFORE starting: make sure participants have Apptainer loaded — 'module load apptainer' or 'module load singularity' depending on your cluster. Have everyone open a terminal.]
-
-    Let's start with the simplest possible thing — pulling a pre-built image from Docker Hub. No definition file, no building, just downloading and running.
-
-    [Type the pull command]
-    "Watch the progress bar — it's downloading layers from Docker Hub and assembling them into a single .sif file. Depending on network speed this takes 1-2 minutes. While it downloads, notice the command — docker://python:3.11-slim. That docker:// prefix is telling Apptainer to go to Docker Hub and pull the 'python' image, version '3.11-slim'. The slim variant is a minimal image — just what we need."
-
-    [While it downloads, talk through what a .sif file is — immutable squashfs archive]
-
-    [After pull completes]
-    "Now let's do something revealing. Check your host Python version, then check the container's Python version."
-    [run both commands]
-    "Different versions, right? And crucially — neither affected the other. They're completely isolated."
 
     [Shell into the container]
     "Now let's get interactive. Notice when you're inside — your prompt changes to 'Apptainer>'. You're in a different environment, but look:"
@@ -666,6 +685,21 @@ speaker_note: |
 
     [Pause for questions — 1 min]
 -->
+
+**Step 3 — Drop into an interactive shell**
+
+```bash
+apptainer shell python311.sif
+# Apptainer> whoami          ← same username as host!
+# Apptainer> echo $HOME      ← your home dir is mounted
+# Apptainer> pip list        ← see installed packages
+# Apptainer> exit
+```
+<!-- pause -- >
+
+<!-- new_line -->
+
+> 👁 **Notice:** Same username inside and outside. `$HOME` already mounted. No `sudo` anywhere.
 
 <!-- end_slide -->
 
@@ -880,9 +914,6 @@ Demo 4 — SLURM Job Script Integration
 #SBATCH --time=01:00:00            # 1 hour walltime
 #SBATCH --output=logs/%j.out      # log per job ID
 
-# Load apptainer module (cluster-specific)
-module load apptainer
-
 # Run analysis inside container
 apptainer exec \
     --bind $SCRATCH:/scratch \          # mount Lustre scratch
@@ -933,8 +964,6 @@ speaker_note: |
     [Walk through the script line by line]
 
     "Standard SLURM headers — job name, cores, memory, time. Nothing container-specific here."
-
-    "module load apptainer — depending on your cluster this might be 'module load singularity' or it might already be in your PATH. Check your cluster docs."
 
     "Then the key line: apptainer exec, followed by your flags, the path to your .sif, then the command to run inside it. That's it. The SLURM scheduler allocates your resources, starts your job on a compute node, and apptainer exec launches your analysis inside the container."
 
